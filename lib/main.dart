@@ -210,29 +210,11 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
             // DEL — SUPPRIMER LE DERNIER CARACTÈRE
             if (text == 'DEL') {
-
-              if (secondNumber.isNotEmpty) {
-                secondNumber = secondNumber.substring(0, secondNumber.length - 1);
-              }
-
-              else if (operator.isNotEmpty) {
-                operator = '';
-                newNumber = false;
-              }
-
-              else if (firstNumber.isNotEmpty) {
-                firstNumber = firstNumber.substring(0, firstNumber.length - 1);
-                display = firstNumber.isEmpty ? '0' : firstNumber;
-              }
-
-              else if (display.length > 1) {
+              if (display.length > 1) {
                 display = display.substring(0, display.length - 1);
-              }
-
-              else {
+              } else {
                 display = '0';
               }
-
               return;
             }
 
