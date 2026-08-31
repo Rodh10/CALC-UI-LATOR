@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'dart:async';
+import 'package:flutter/material.dart';
+
 void main() {
   runApp(const CalculatorApp());
 }
@@ -34,7 +37,14 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
   String gridDigit = '';
   List<List<int>> activeCells = [];
+
+  Timer? _cellTimer;
   
+  @override
+  void dispose() {
+    _cellTimer?.cancel();
+    super.dispose();
+  }
   
 
   @override
@@ -108,13 +118,16 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                 children: List.generate(
                                   4,
                                   (col) => Expanded(
-                                    child: Container(
+                                    child: AnimatedContainer(
+                                      duration: const Duration(milliseconds: 500),
+                                      curve: Curves.easeOut,
                                       margin: const EdgeInsets.all(6),
                                       decoration: BoxDecoration(
                                         color: activeCells.any(
-                                          (cell) => cell[0] == row && cell[1] == col,
+                                          (cell) =>
+                                              cell[0] == row &&
+                                              cell[1] == col,
                                         )
-
                                             ? Colors.white
                                             : Colors.transparent,
 
@@ -122,7 +135,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                           color: Colors.white24,
                                         ),
 
-                                        borderRadius: BorderRadius.circular(100),
+                                        borderRadius:
+                                            BorderRadius.circular(100),
                                       ),
                                     ),
                                   ),
@@ -133,7 +147,6 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                         ),
                       ),
                     ),
-
 
                     
 
@@ -365,7 +378,22 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
               };
 
               if (digitPatterns.containsKey(text)) {
-                activeCells = digitPatterns[text]!;
+                _cellTimer?.cancel();
+
+                setState(() {
+                  activeCells = digitPatterns[text]!;
+                });
+
+                _cellTimer = Timer(
+                  const Duration(seconds: 3),
+                  () {
+                    if (mounted) {
+                      setState(() {
+                        activeCells = [];
+                      });
+                    }
+                  },
+                );
               }
 
               // Nouveau calcul après "="
