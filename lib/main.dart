@@ -38,6 +38,97 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   String gridDigit = '';
   List<List<int>> activeCells = [];
 
+
+
+  final Map<String, List<List<int>>> digitPatterns = {
+    '0': [
+      [0,1], [0,2],
+      [1,0],       [1,3],
+      [2,0],       [2,3],
+      [3,0],       [3,3],
+      [4,0], [4,1], [4,2], [4,3],
+    ],
+
+    '1': [
+      [0,1],
+      [1,0], [1,1],
+      [2,1],
+      [3,1], [3,3],
+      [4,0], [4,1], [4,2], [4,3],
+    ],
+
+    '2': [
+      [0,1], [0,2],
+      [1,3],
+      [2,1], [2,2],
+      [3,0],
+      [4,0], [4,1], [4,2], [4,3],
+    ],
+
+    '3': [
+      [0,0], [0,1],
+            [1,2],
+      [2,1], [2,2], 
+            [3,3],
+      [4,0], [4,1], [4,2], [4,3],
+    ],
+
+    '4': [
+              [0,2],
+      [1,1],       
+      [2,0], [2,2], 
+                    [3,0], [3,1], [3,2], [3,3],
+                    [4,2],
+    ],
+
+    '5': [
+      [0,1], [0,2],
+      [1,0],
+      [2,1], [2,2], 
+            [3,3],
+      [4,0], [4,1], [4,2],  [4,3],
+    ],
+
+    '6': [
+      [0,1], [0,2],
+      [1,0],
+      [2,1], [2,2],
+      [3,0],       [3,3],
+      [4,0], [4,1], [4,2],  [4,3],
+    ],
+
+    '7': [
+      [0,0], [0,1], [0,2], [0,3],
+            [1,3],
+            [2,1], [2,2],
+            [3,2],
+            [4,2],
+    ],
+
+    '8': [
+      [0,1], [0,2], 
+      [1,0],       [1,3],
+      [2,1], [2,2],
+      [3,0],       [3,3],
+      [4,0], [4,1], [4,2], [4,3], 
+    ],
+
+    '9': [
+      [0,1], [0,2],
+      [1,0],       [1,3],
+      [2,0], [2,1], [2,2],
+            [3,3],
+      [4,0], [4,1], [4,2], [4,3], 
+    ],
+  };
+
+
+
+
+
+
+
+
   Timer? _cellTimer;
   
   @override
@@ -96,6 +187,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                   ),
                 ),
                 child: Stack(
+                  clipBehavior: Clip.none,
                   children: [
 
                     // GRID
@@ -106,10 +198,13 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
 
 
-                    Center(
+                    Positioned(
+                      top: 290,
+                      left: 0,
+                      right: 0,
                       child: SizedBox(
-                        width: 240,
-                        height: 300,
+                        width: 400,
+                        height: 450,
                         child: Column(
                           children: List.generate(
                             5,
@@ -128,7 +223,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                               cell[0] == row &&
                                               cell[1] == col,
                                         )
-                                            ? Colors.white
+                                            ? const Color(0xFFF24B29)
                                             : Colors.transparent,
 
                                         border: Border.all(
@@ -147,7 +242,6 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                         ),
                       ),
                     ),
-
                     
 
                     // TEXTE SYSTEME
@@ -182,7 +276,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
                     // RESULTAT
                     Positioned(
-                      bottom: 40,
+                      bottom: -100,
                       right: 25,
                       child: Column(
                         crossAxisAlignment:
@@ -295,87 +389,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
             if (text == '.' || int.tryParse(text) != null) {
 
 
-              final Map<String, List<List<int>>> digitPatterns = {
-                '0': [
-                  [0,1], [0,2],
-                  [1,0],       [1,3],
-                  [2,0],       [2,3],
-                  [3,0],       [3,3],
-                  [4,0], [4,1], [4,2], [4,3],
-                ],
 
-                '1': [
-                  [0,1],
-                  [1,0], [1,1],
-                  [2,1],
-                  [3,1], [3,3],
-                  [4,0], [4,1], [4,2], [4,3],
-                ],
-
-                '2': [
-                  [0,1], [0,2],
-                  [1,3],
-                  [2,1], [2,2],
-                  [3,0],
-                  [4,0], [4,1], [4,2], [4,3],
-                ],
-
-                '3': [
-                  [0,0], [0,1],
-                        [1,2],
-                  [2,1], [2,2], 
-                        [3,3],
-                  [4,0], [4,1], [4,2], [4,3],
-                ],
-
-                '4': [
-                         [0,2],
-                  [1,1],       
-                  [2,0], [2,2], 
-                                [3,0], [3,1], [3,2], [3,3],
-                                [4,2],
-                ],
-
-                '5': [
-                  [0,1], [0,2],
-                  [1,0],
-                  [2,1], [2,2], 
-                        [3,3],
-                  [4,0], [4,1], [4,2],  [4,3],
-                ],
-
-                '6': [
-                  [0,1], [0,2],
-                  [1,0],
-                  [2,1], [2,2],
-                  [3,0],       [3,3],
-                  [4,0], [4,1], [4,2],  [4,3],
-                ],
-
-                '7': [
-                  [0,0], [0,1], [0,2], [0,3],
-                        [1,3],
-                        [2,1], [2,2],
-                        [3,2],
-                        [4,2],
-                ],
-
-                '8': [
-                  [0,1], [0,2], 
-                  [1,0],       [1,3],
-                  [2,1], [2,2],
-                  [3,0],       [3,3],
-                  [4,0], [4,1], [4,2], [4,3], 
-                ],
-
-                '9': [
-                  [0,1], [0,2],
-                  [1,0],       [1,3],
-                  [2,0], [2,1], [2,2],
-                        [3,3],
-                  [4,0], [4,1], [4,2], [4,3], 
-                ],
-              };
 
               if (digitPatterns.containsKey(text)) {
                 _cellTimer?.cancel();
@@ -471,12 +485,12 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
         },
 
         child: Padding(
-          padding: const EdgeInsets.all(4),
+          padding: const EdgeInsets.all(5),
           child: Container(
-            height: 60,
+            height: 80,
             decoration: BoxDecoration(
               border: Border.all(
-                color: Colors.white24,
+                color: Colors.transparent,
               ),
             ),
             child: Center(
