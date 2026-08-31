@@ -31,6 +31,10 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   bool newNumber = false;
   bool showResult = false;
   bool newCalculation = false;
+
+  String gridDigit = '';
+  List<List<int>> activeCells = [];
+  
   
 
   @override
@@ -89,6 +93,49 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                       size: Size.infinite,
                       painter: GridPainter(),
                     ),
+
+
+
+                    Center(
+                      child: SizedBox(
+                        width: 240,
+                        height: 300,
+                        child: Column(
+                          children: List.generate(
+                            5,
+                            (row) => Expanded(
+                              child: Row(
+                                children: List.generate(
+                                  4,
+                                  (col) => Expanded(
+                                    child: Container(
+                                      margin: const EdgeInsets.all(6),
+                                      decoration: BoxDecoration(
+                                        color: activeCells.any(
+                                          (cell) => cell[0] == row && cell[1] == col,
+                                        )
+
+                                            ? Colors.white
+                                            : Colors.transparent,
+
+                                        border: Border.all(
+                                          color: Colors.white24,
+                                        ),
+
+                                        borderRadius: BorderRadius.circular(100),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+
+                    
 
                     // TEXTE SYSTEME
                     Padding(
@@ -233,6 +280,93 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
             // CHIFFRE OU POINT
             if (text == '.' || int.tryParse(text) != null) {
+
+
+              final Map<String, List<List<int>>> digitPatterns = {
+                '0': [
+                  [0,0], [0,1], [0,2],
+                  [1,0],       [1,2],
+                  [2,0],       [2,2],
+                  [3,0],       [3,2],
+                  [4,0], [4,1], [4,2],
+                ],
+
+                '1': [
+                  [0,1],
+                  [1,0], [1,1],
+                  [2,1],
+                  [3,1],
+                  [4,0], [4,1], [4,2], [4,3],
+                ],
+
+                '2': [
+                  [0,1], [0,2],
+                  [1,3],
+                  [2,1], [2,2],
+                  [3,0],
+                  [4,0], [4,1], [4,2], [4,3],
+                ],
+
+                '3': [
+                  [0,0], [0,1], [0,2],
+                        [1,2],
+                  [2,0], [2,1], [2,2],
+                        [3,2],
+                  [4,0], [4,1], [4,2],
+                ],
+
+                '4': [
+                  [0,0],       [0,2],
+                  [1,0],       [1,2],
+                  [2,0], [2,1], [2,2],
+                                [3,2],
+                                [4,2],
+                ],
+
+                '5': [
+                  [0,0], [0,1], [0,2],
+                  [1,0],
+                  [2,0], [2,1], [2,2],
+                        [3,2],
+                  [4,0], [4,1], [4,2],
+                ],
+
+                '6': [
+                  [0,0], [0,1], [0,2],
+                  [1,0],
+                  [2,0], [2,1], [2,2],
+                  [3,0],       [3,2],
+                  [4,0], [4,1], [4,2],
+                ],
+
+                '7': [
+                  [0,0], [0,1], [0,2],
+                        [1,2],
+                        [2,2],
+                        [3,2],
+                        [4,2],
+                ],
+
+                '8': [
+                  [0,0], [0,1], [0,2],
+                  [1,0],       [1,2],
+                  [2,0], [2,1], [2,2],
+                  [3,0],       [3,2],
+                  [4,0], [4,1], [4,2],
+                ],
+
+                '9': [
+                  [0,0], [0,1], [0,2],
+                  [1,0],       [1,2],
+                  [2,0], [2,1], [2,2],
+                        [3,2],
+                  [4,0], [4,1], [4,2],
+                ],
+              };
+
+              if (digitPatterns.containsKey(text)) {
+                activeCells = digitPatterns[text]!;
+              }
 
               // Nouveau calcul après "="
               if (newCalculation) {
