@@ -44,6 +44,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   String currentTime = '';
   Timer? _clockTimer;
 
+  
 
   final Map<String, List<List<int>>> digitPatterns = {
     '0': [
