@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'dart:async';
-import 'package:flutter/material.dart';
+import 'dart:math';
 
 void main() {
   runApp(const CalculatorApp());
@@ -129,14 +129,94 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
 
 
-  Timer? _cellTimer;
+  final List<Timer> _cellTimers = [];
   
   @override
   void dispose() {
-    _cellTimer?.cancel();
+    for (final timer in _cellTimers) {
+      timer.cancel();
+    }
+    _cellTimers.clear();
+
     super.dispose();
   }
   
+
+
+
+  void animateCellsRandomly(String digit) {
+    // Annuler toutes les anciennes animations
+    for (final timer in _cellTimers) {
+      timer.cancel();
+    }
+    _cellTimers.clear();
+
+    final cells = List<List<int>>.from(
+      digitPatterns[digit]!.map((cell) => List<int>.from(cell)),
+    );
+
+    final random = Random();
+
+    // Mélange aléatoire pour l'apparition
+    cells.shuffle(random);
+
+    activeCells = [];
+
+    // APPARITION ALÉATOIRE
+    for (int i = 0; i < cells.length; i++) {
+      final cell = cells[i];
+
+      final timer = Timer(
+        Duration(milliseconds: 100 * i),
+        () {
+          if (!mounted) return;
+
+          setState(() {
+            activeCells.add(cell);
+          });
+        },
+      );
+
+      _cellTimers.add(timer);
+    }
+
+    // Temps nécessaire pour que toutes les cellules apparaissent
+    final appearanceDuration = 100 * cells.length;
+
+    // DISPARITION ALÉATOIRE
+    final disappearCells = List<List<int>>.from(
+      cells.map((cell) => List<int>.from(cell)),
+    );
+
+    disappearCells.shuffle(random);
+
+    for (int i = 0; i < disappearCells.length; i++) {
+      final cell = disappearCells[i];
+
+      final timer = Timer(
+        Duration(
+          milliseconds: appearanceDuration + 1500 + (100 * i),
+        ),
+        () {
+          if (!mounted) return;
+
+          setState(() {
+            activeCells.removeWhere(
+              (activeCell) =>
+                  activeCell[0] == cell[0] &&
+                  activeCell[1] == cell[1],
+            );
+          });
+        },
+      );
+
+      _cellTimers.add(timer);
+    }
+  }
+
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -185,6 +265,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                   border: Border.all(
                     color: Colors.white24,
                   ),
+                  borderRadius: BorderRadius.circular(25),
                 ),
                 child: Stack(
                   clipBehavior: Clip.none,
@@ -223,7 +304,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                               cell[0] == row &&
                                               cell[1] == col,
                                         )
-                                            ? const Color(0xFFF24B29)
+                                            ? const Color(0xFFFFFFFF).withValues(alpha: 0.3)
                                             : Colors.transparent,
 
                                         border: Border.all(
@@ -246,28 +327,29 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
                     // TEXTE SYSTEME
                     Padding(
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(15),
                       child: Column(
                         crossAxisAlignment:
                             CrossAxisAlignment.start,
                         children: const [
                           Text(
-                            'DERNIER REP (AC):',
+                            'LAST ANS:',
                             style: TextStyle(
                               color: Colors.white,
-                              fontFamily: 'Courier',
-                              fontSize: 20,
+                              fontFamily: 'OffBit-Regular',
+                              fontSize: 10,
                               letterSpacing: 2,
                             ),
                           ),
 
-                          SizedBox(height: 20),
+                          SizedBox(height: 2),
 
                           Text(
                             '0011011011011001101',
                             style: TextStyle(
-                              color: Colors.white54,
+                              color: const Color(0xFFF24B29),
                               fontFamily: 'OffBit-Regular',
+                              fontSize: 20,
                             ),
                           ),
                         ],
@@ -390,24 +472,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
 
 
-
               if (digitPatterns.containsKey(text)) {
-                _cellTimer?.cancel();
-
-                setState(() {
-                  activeCells = digitPatterns[text]!;
-                });
-
-                _cellTimer = Timer(
-                  const Duration(seconds: 3),
-                  () {
-                    if (mounted) {
-                      setState(() {
-                        activeCells = [];
-                      });
-                    }
-                  },
-                );
+                animateCellsRandomly(text);
               }
 
               // Nouveau calcul après "="
