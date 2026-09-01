@@ -38,6 +38,11 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   String gridDigit = '';
   List<List<int>> activeCells = [];
 
+  String activeButton = '';
+  String lastAnswer = '';
+
+  String currentTime = '';
+  Timer? _clockTimer;
 
 
   final Map<String, List<List<int>>> digitPatterns = {
@@ -124,15 +129,76 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
 
 
+  final Map<String, Color> buttonColors = {
+  // Chiffres
+  '0': const Color(0xFFff651b),
+  '1': const Color(0xFFff651b),
+  '2': const Color(0xFFff651b),
+  '3': const Color(0xFFff651b),
+  '4': const Color(0xFFff651b),
+  '5': const Color(0xFFff651b),
+  '6': const Color(0xFFff651b),
+  '7': const Color(0xFFff651b),
+  '8': const Color(0xFFff651b),
+  '9': const Color(0xFFff651b),
 
+  // Opérateurs
+  '+': const Color(0xFF1f39ff),
+  '−': const Color(0xFF1f39ff),
+  '×': const Color(0xFF1f39ff),
+  '÷': const Color(0xFF1f39ff),
 
+  // Actions
+  '=': const Color(0xFF2196F3),
+  'DEL': const Color(0xFFfe0000),
+  'AC': const Color(0xFFffffff),
+  '±': const Color(0xFFffcc00),
+  
+  // Virgule / point
+  '.': const Color(0xFFffcc00),
+
+  // Parenthèses
+  '( )': const Color(0xFFffcc00),
+
+};
 
 
 
   final List<Timer> _cellTimers = [];
+
+
+  @override
+  void initState() {
+    super.initState();
+
+    _updateClock();
+
+    _clockTimer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => _updateClock(),
+    );
+  }
+
+  void _updateClock() {
+    final now = DateTime.now();
+
+    if (!mounted) return;
+
+    setState(() {
+      currentTime =
+          '${now.hour.toString().padLeft(2, '0')}:'
+          '${now.minute.toString().padLeft(2, '0')}:'
+          '${now.second.toString().padLeft(2, '0')}';
+    });
+  }
+
+
+
   
   @override
   void dispose() {
+    _clockTimer?.cancel();
+
     for (final timer in _cellTimers) {
       timer.cancel();
     }
@@ -216,6 +282,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
 
 
+  
+
 
 
   @override
@@ -230,25 +298,25 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: 20,
-                vertical: 15,
+                vertical: 5,
               ),
               child: Row(
                 mainAxisAlignment:
                     MainAxisAlignment.spaceBetween,
-                children: const [
+                children: [
                   Text(
-                    '00:25:05',
-                    style: TextStyle(
+                    currentTime,
+                    style: const TextStyle(
                       color: Colors.white70,
-                      fontFamily: 'Courier',
+                      fontFamily: 'offbit-regular',
                       letterSpacing: 2,
                     ),
                   ),
-                  Text(
+                  const Text(
                     'DR-5',
                     style: TextStyle(
                       color: Colors.white70,
-                      fontFamily: 'Courier',
+                      fontFamily: 'offbit-regular',
                       letterSpacing: 2,
                     ),
                   ),
@@ -258,9 +326,10 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
             // ÉCRAN
             Expanded(
+              flex: 1,
               child: Container(
                 width: double.infinity,
-                margin: const EdgeInsets.all(20),
+                margin: const EdgeInsets.fromLTRB(25, 10, 25, 0),
                 decoration: BoxDecoration(
                   border: Border.all(
                     color: Colors.white24,
@@ -280,7 +349,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
 
                     Positioned(
-                      top: 290,
+                      top: 320,
                       left: 0,
                       right: 0,
                       child: SizedBox(
@@ -308,7 +377,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                             : Colors.transparent,
 
                                         border: Border.all(
-                                          color: Colors.white24,
+                                          color: Colors.transparent,
                                         ),
 
                                         borderRadius:
@@ -329,10 +398,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                     Padding(
                       padding: const EdgeInsets.all(15),
                       child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
-                        children: const [
-                          Text(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
                             'LAST ANS:',
                             style: TextStyle(
                               color: Colors.white,
@@ -342,14 +410,34 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                             ),
                           ),
 
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
 
-                          Text(
-                            '0011011011011001101',
-                            style: TextStyle(
-                              color: const Color(0xFFF24B29),
-                              fontFamily: 'OffBit-Regular',
-                              fontSize: 20,
+                          GestureDetector(
+                            onTap: () {
+                              // S'il n'y a encore aucun résultat, on ne fait rien
+                              if (lastAnswer.isEmpty) return;
+
+                              setState(() {
+                                display = lastAnswer;
+                                firstNumber = '';
+
+                                secondNumber = '';
+                                operator = '';
+                                newNumber = false;
+                                newCalculation = false;
+                                showResult = false;
+                              });
+                            },
+
+                            child: Text(
+                              lastAnswer.isEmpty
+                                  ? '0000000000000'
+                                  : lastAnswer,
+                              style: const TextStyle(
+                                color: Color(0xFFF24B29),
+                                fontFamily: 'OffBit-Regular',
+                                fontSize: 20,
+                              ),
                             ),
                           ),
                         ],
@@ -357,42 +445,71 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                     ),
 
                     // RESULTAT
+                    // CALCUL LINÉAIRE
                     Positioned(
-                      bottom: -100,
+                      bottom: -10,
+                      left: 15,
                       right: 25,
-                      child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.end,
-                        children: [
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 150,
+                        child: Align(
+                          alignment: Alignment.bottomRight,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.bottomRight,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.baseline,
+                              textBaseline: TextBaseline.alphabetic,
+                              children: [
 
-                          Text(
-                            showResult ? display : (firstNumber.isEmpty ? display : firstNumber),
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 120,
-                              fontFamily: 'OffBit-Dot',
-                              height: 0.8,
+                                // PREMIER NOMBRE
+                                Text(
+                                  showResult
+                                      ? display
+                                      : (firstNumber.isEmpty ? display : firstNumber),
+                                  maxLines: 1,
+                                  softWrap: false,
+                                  style: TextStyle(
+                                    color: showResult
+                                        ? const Color(0xFF2196F3)
+                                        : Colors.white,
+                                    fontSize: 120,
+                                    fontFamily: 'OffBit-Dot',
+                                  ),
+                                ),
+
+                                // OPÉRATEUR
+                                if (operator.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                                    child: Text(
+                                      operator,
+                                      style: const TextStyle(
+                                        color: const Color(0xFF1f39ff),
+                                        fontSize: 80,
+                                        fontFamily: 'OffBit-Dot',
+                                      ),
+                                    ),
+                                  ),
+
+                                // DEUXIÈME NOMBRE
+                                if (secondNumber.isNotEmpty)
+                                  Text(
+                                    secondNumber,
+                                    maxLines: 1,
+                                    softWrap: false,
+                                    style: const TextStyle(
+                                      color: const Color(0xFFff651b),
+                                      fontSize: 100,
+                                      fontFamily: 'OffBit-Dot',
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
-
-                          Text(
-                            operator,
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 40,
-                              fontFamily: 'OffBit-Dot',
-                            ),
-                          ),
-
-                          Text(
-                            secondNumber,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 70,
-                              fontFamily: 'OffBit-Dot',
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ],
@@ -421,15 +538,30 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
   Widget row(List<String> items) {
     return Row(
-      children:
-          items.map((e) => button(e)).toList(),
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: items.map((e) => button(e)).toList(),
     );
   }
 
   Widget button(String text) {
-    return Expanded(
+    return SizedBox(
+      width: 90,
       child: GestureDetector(
         onTap: () {
+          setState(() {
+            activeButton = text;
+          });
+
+          Timer(const Duration(milliseconds: 500), () {
+            if (!mounted) return;
+
+            setState(() {
+              if (activeButton == text) {
+                activeButton = '';
+              }
+            });
+          });
+
           setState(() {
 
             // AC — RESET COMPLET
@@ -444,13 +576,51 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
               return;
             }
 
-            // DEL — SUPPRIMER LE DERNIER CARACTÈRE
+            // DEL — SUPPRIMER LE DERNIER ÉLÉMENT DU CALCUL
             if (text == 'DEL') {
-              if (display.length > 1) {
-                display = display.substring(0, display.length - 1);
-              } else {
-                display = '0';
+
+              // DEUXIÈME NOMBRE
+              if (operator.isNotEmpty && secondNumber.isNotEmpty) {
+
+                if (secondNumber.length > 1) {
+                  secondNumber =
+                      secondNumber.substring(0, secondNumber.length - 1);
+                } else {
+                  secondNumber = '';
+                  newNumber = true;
+                }
+
+                return;
               }
+
+              // OPÉRATEUR
+              if (operator.isNotEmpty && secondNumber.isEmpty) {
+
+                operator = '';
+                newNumber = false;
+
+                // Le premier nombre redevient le nombre affiché
+                display = firstNumber;
+
+                // On vide firstNumber pour revenir à la saisie normale
+                firstNumber = '';
+
+                return;
+              }
+
+              // PREMIER NOMBRE
+              if (operator.isEmpty) {
+
+                if (display.length > 1) {
+                  display =
+                      display.substring(0, display.length - 1);
+                } else {
+                  display = '0';
+                }
+
+                return;
+              }
+
               return;
             }
 
@@ -496,7 +666,11 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
               // Premier nombre
               else if (display == '0') {
-                display = text;
+                if (text == '.') {
+                  display = '0.';
+                } else {
+                  display = text;
+                }
               }
 
               else {
@@ -538,6 +712,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
               // Garde uniquement le résultat
               display = result.toString();
 
+              // MÉMORISE LE DERNIER RÉSULTAT
+              lastAnswer = display;
+
               // Reset du calcul
               firstNumber = '';
               operator = '';
@@ -552,12 +729,19 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
         child: Padding(
           padding: const EdgeInsets.all(5),
-          child: Container(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            curve: Curves.easeOut,
             height: 80,
             decoration: BoxDecoration(
+              color: activeButton == text
+                  ? buttonColors[text] ?? Colors.white
+                  : Colors.transparent,
               border: Border.all(
-                color: Colors.transparent,
+                color: Colors.white24,
               ),
+
+              borderRadius: BorderRadius.circular(50),
             ),
             child: Center(
               child: Text(
@@ -576,6 +760,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   }
 }
 
+
+
 class GridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -586,6 +772,15 @@ class GridPainter extends CustomPainter {
 
     const step = 20.0;
 
+    // Coins arrondis du quadrillage
+    canvas.clipRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(0, 0, size.width, size.height),
+        const Radius.circular(25),
+      ),
+    );
+
+    // Lignes verticales
     for (double x = 0; x < size.width; x += step) {
       canvas.drawLine(
         Offset(x, 0),
@@ -594,6 +789,7 @@ class GridPainter extends CustomPainter {
       );
     }
 
+    // Lignes horizontales
     for (double y = 0; y < size.height; y += step) {
       canvas.drawLine(
         Offset(0, y),
