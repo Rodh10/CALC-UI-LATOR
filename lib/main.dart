@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'dart:async';
 import 'dart:math';
+
 
 void main() {
   runApp(const CalculatorApp());
@@ -131,37 +133,37 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
 
   final Map<String, Color> buttonColors = {
-  // Chiffres
-  '0': const Color(0xFFff651b),
-  '1': const Color(0xFFff651b),
-  '2': const Color(0xFFff651b),
-  '3': const Color(0xFFff651b),
-  '4': const Color(0xFFff651b),
-  '5': const Color(0xFFff651b),
-  '6': const Color(0xFFff651b),
-  '7': const Color(0xFFff651b),
-  '8': const Color(0xFFff651b),
-  '9': const Color(0xFFff651b),
+    // Chiffres
+    '0': const Color(0xFFff651b),
+    '1': const Color(0xFFff651b),
+    '2': const Color(0xFFff651b),
+    '3': const Color(0xFFff651b),
+    '4': const Color(0xFFff651b),
+    '5': const Color(0xFFff651b),
+    '6': const Color(0xFFff651b),
+    '7': const Color(0xFFff651b),
+    '8': const Color(0xFFff651b),
+    '9': const Color(0xFFff651b),
 
-  // Opérateurs
-  '+': const Color(0xFF1f39ff),
-  '−': const Color(0xFF1f39ff),
-  '×': const Color(0xFF1f39ff),
-  '÷': const Color(0xFF1f39ff),
+    // Opérateurs
+    '+': const Color(0xFF1f39ff),
+    '−': const Color(0xFF1f39ff),
+    '×': const Color(0xFF1f39ff),
+    '÷': const Color(0xFF1f39ff),
 
-  // Actions
-  '=': const Color(0xFF2196F3),
-  'DEL': const Color(0xFFfe0000),
-  'AC': const Color(0xFFffffff),
-  '±': const Color(0xFFffcc00),
-  
-  // Virgule / point
-  '.': const Color(0xFFffcc00),
+    // Actions
+    '=': const Color(0xFF2196F3),
+    'DEL': const Color(0xFFfe0000),
+    'AC': const Color(0xFFffffff),
+    '±': const Color(0xFFffcc00),
+    
+    // Virgule / point
+    '.': const Color(0xFFffcc00),
 
-  // Parenthèses
-  '( )': const Color(0xFFffcc00),
+    // Parenthèses
+    '( )': const Color(0xFFffcc00),
 
-};
+  };
 
 
 
@@ -418,6 +420,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                               // S'il n'y a encore aucun résultat, on ne fait rien
                               if (lastAnswer.isEmpty) return;
 
+                              HapticFeedback.selectionClick();
+
                               setState(() {
                                 display = lastAnswer;
                                 firstNumber = '';
@@ -524,10 +528,10 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
               child: Column(
                 children: [
                   row(['AC', '( )', '±', 'DEL']),
-                  row(['7', '8', '9', '÷']),
-                  row(['4', '5', '6', '×']),
-                  row(['1', '2', '3', '−']),
-                  row(['0', '.', '=', '+']),
+                  row(['7', '8', '9', '+']),
+                  row(['4', '5', '6', '−']),
+                  row(['1', '2', '3', '×']),
+                  row(['0', '.', '=', '÷']),
                 ],
               ),
             ),
@@ -544,11 +548,97 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     );
   }
 
+  Future<void> _vibrateButton(String text) async {
+    // CHIFFRES
+    if (int.tryParse(text) != null) {
+      await HapticFeedback.lightImpact();
+      return;
+    }
+
+    // OPÉRATEURS : ··
+    if (text == '+' ||
+        text == '−' ||
+        text == '×' ||
+        text == '÷') {
+      await HapticFeedback.lightImpact();
+
+      await Future.delayed(
+        const Duration(milliseconds: 55),
+      );
+
+      await HapticFeedback.lightImpact();
+      return;
+    }
+
+    // DEL : —
+    if (text == 'DEL') {
+      await HapticFeedback.mediumImpact();
+      return;
+    }
+
+    // AC : — ·
+    if (text == 'AC') {
+      await HapticFeedback.heavyImpact();
+
+      await Future.delayed(
+        const Duration(milliseconds: 90),
+      );
+
+      await HapticFeedback.lightImpact();
+      return;
+    }
+
+    // ÉGAL : ——
+    if (text == '=') {
+      await HapticFeedback.mediumImpact();
+
+      await Future.delayed(
+        const Duration(milliseconds: 100),
+      );
+
+      await HapticFeedback.heavyImpact();
+      return;
+    }
+
+    // ± : · ·
+    if (text == '±') {
+      await HapticFeedback.lightImpact();
+
+      await Future.delayed(
+        const Duration(milliseconds: 70),
+      );
+
+      await HapticFeedback.lightImpact();
+      return;
+    }
+
+    // POINT : · très léger
+    if (text == '.') {
+      await HapticFeedback.selectionClick();
+      return;
+    }
+
+    // PARENTHESES : ·—
+    if (text == '( )') {
+      await HapticFeedback.selectionClick();
+
+      await Future.delayed(
+        const Duration(milliseconds: 80),
+      );
+
+      await HapticFeedback.mediumImpact();
+      return;
+    }
+  }
+
+
   Widget button(String text) {
     return SizedBox(
       width: 90,
       child: GestureDetector(
         onTap: () {
+          _vibrateButton(text);
+
           setState(() {
             activeButton = text;
           });
@@ -762,7 +852,6 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 }
 
 
-
 class GridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -805,3 +894,6 @@ class GridPainter extends CustomPainter {
     return false;
   }
 }
+
+
+
