@@ -833,7 +833,6 @@ class _RollingCalculationDisplayState
   late AnimationController _controller;
 
   String _oldValue = '';
-  String _previousValue = '';
 
   @override
   void initState() {
@@ -1068,7 +1067,6 @@ class _RollingCalculationPainter extends CustomPainter {
       List<_CalculationCharacter> list,
     ) {
 
-      double usedWidth = 0;
 
       int line = 0;
 
