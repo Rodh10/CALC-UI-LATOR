@@ -449,71 +449,24 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                       ),
                     ),
 
+
+                    // RESULTAT
                     // RESULTAT
                     // CALCUL LINÉAIRE
                     Positioned(
-                      bottom: -10,
+                      bottom: 0,
                       left: 15,
-                      right: 25,
+                      right: 15,
                       child: SizedBox(
                         width: double.infinity,
                         height: 150,
-                        child: Align(
-                          alignment: Alignment.bottomRight,
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.bottomRight,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.baseline,
-                              textBaseline: TextBaseline.alphabetic,
-                              children: [
-
-                                // PREMIER NOMBRE
-                                Text(
-                                  showResult
-                                      ? display
-                                      : (firstNumber.isEmpty ? display : firstNumber),
-                                  maxLines: 1,
-                                  softWrap: false,
-                                  style: TextStyle(
-                                    color: showResult
-                                        ? const Color(0xFF2196F3)
-                                        : Colors.white,
-                                    fontSize: 120,
-                                    fontFamily: 'OffBit-Dot',
-                                  ),
-                                ),
-
-                                // OPÉRATEUR
-                                if (operator.isNotEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 15),
-                                    child: Text(
-                                      operator,
-                                      style: const TextStyle(
-                                        color: const Color(0xFF1f39ff),
-                                        fontSize: 80,
-                                        fontFamily: 'OffBit-Dot',
-                                      ),
-                                    ),
-                                  ),
-
-                                // DEUXIÈME NOMBRE
-                                if (secondNumber.isNotEmpty)
-                                  Text(
-                                    secondNumber,
-                                    maxLines: 1,
-                                    softWrap: false,
-                                    style: const TextStyle(
-                                      color: const Color(0xFFff651b),
-                                      fontSize: 100,
-                                      fontFamily: 'OffBit-Dot',
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
+                        child: RollingCalculationDisplay(
+                          firstNumber: showResult
+                              ? display
+                              : (firstNumber.isEmpty ? display : firstNumber),
+                          operator: operator,
+                          secondNumber: secondNumber,
+                          showResult: showResult,
                         ),
                       ),
                     ),
@@ -852,6 +805,509 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 }
 
 
+
+class RollingCalculationDisplay extends StatefulWidget {
+  final String firstNumber;
+  final String operator;
+  final String secondNumber;
+  final bool showResult;
+
+  const RollingCalculationDisplay({
+    super.key,
+    required this.firstNumber,
+    required this.operator,
+    required this.secondNumber,
+    required this.showResult,
+  });
+
+  @override
+  State<RollingCalculationDisplay> createState() =>
+      _RollingCalculationDisplayState();
+}
+
+
+class _RollingCalculationDisplayState
+    extends State<RollingCalculationDisplay>
+    with SingleTickerProviderStateMixin {
+
+  late AnimationController _controller;
+
+  String _oldValue = '';
+  String _previousValue = '';
+
+  @override
+  void initState() {
+    super.initState();
+
+    _oldValue = _buildValue();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 220),
+    );
+  }
+
+
+  String _buildValue() {
+    return widget.firstNumber +
+        widget.operator +
+        widget.secondNumber;
+  }
+
+
+  @override
+  void didUpdateWidget(
+    covariant RollingCalculationDisplay oldWidget,
+  ) {
+    super.didUpdateWidget(oldWidget);
+
+    final newValue = _buildValue();
+
+    if (newValue == _oldValue) {
+      return;
+    }
+
+    final previousValue = _oldValue;
+
+    _oldValue = newValue;
+
+    // ----------------------------------------------------------
+    // NOUVEAU CARACTÈRE
+    // ----------------------------------------------------------
+
+    if (newValue.length > previousValue.length &&
+        newValue.startsWith(previousValue)) {
+
+      _controller.forward(from: 0);
+    }
+
+    // ----------------------------------------------------------
+    // DEL / AC / RÉSULTAT
+    // ----------------------------------------------------------
+
+    else {
+      _controller.stop();
+      _controller.value = 1;
+    }
+  }
+
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+
+        return AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+
+            return CustomPaint(
+              size: Size(
+                constraints.maxWidth,
+                150,
+              ),
+
+              painter: _RollingCalculationPainter(
+                firstNumber: widget.firstNumber,
+                operator: widget.operator,
+                secondNumber: widget.secondNumber,
+                oldValue: _oldValue,
+                progress: _controller.value,
+                showResult: widget.showResult,
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+
+class _RollingCalculationPainter extends CustomPainter {
+
+  final String firstNumber;
+  final String operator;
+  final String secondNumber;
+
+  final String oldValue;
+
+  final double progress;
+
+  final bool showResult;
+
+
+  _RollingCalculationPainter({
+    required this.firstNumber,
+    required this.operator,
+    required this.secondNumber,
+    required this.oldValue,
+    required this.progress,
+    required this.showResult,
+  });
+
+
+  static const TextStyle numberStyle = TextStyle(
+    fontSize: 100,
+    fontFamily: 'OffBit-Dot',
+    height: 1,
+  );
+
+
+  static const TextStyle operatorStyle = TextStyle(
+    fontSize: 80,
+    fontFamily: 'OffBit-Dot',
+    height: 1,
+  );
+
+
+  // ------------------------------------------------------------
+  // CONSTRUIT LA SÉQUENCE COMPLÈTE
+  // ------------------------------------------------------------
+
+  List<_CalculationCharacter> _characters() {
+
+    final characters = <_CalculationCharacter>[];
+
+
+    // PREMIER NOMBRE
+    for (final char in firstNumber.split('')) {
+      characters.add(
+        _CalculationCharacter(
+          char: char,
+          color: showResult
+              ? const Color(0xFF2196F3)
+              : Colors.white,
+          isOperator: false,
+        ),
+      );
+    }
+
+
+    // OPÉRATEUR
+    if (operator.isNotEmpty) {
+      characters.add(
+        _CalculationCharacter(
+          char: operator,
+          color: const Color(0xFF1f39ff),
+          isOperator: true,
+        ),
+      );
+    }
+
+
+    // DEUXIÈME NOMBRE
+    for (final char in secondNumber.split('')) {
+      characters.add(
+        _CalculationCharacter(
+          char: char,
+          color: const Color(0xFFff651b),
+          isOperator: false,
+        ),
+      );
+    }
+
+
+    return characters;
+  }
+
+
+  @override
+  void paint(Canvas canvas, Size size) {
+
+    final characters = _characters();
+
+    if (characters.isEmpty) {
+      return;
+    }
+
+
+    // ----------------------------------------------------------
+    // LARGEUR DE CHAQUE TYPE DE CARACTÈRE
+    // ----------------------------------------------------------
+
+    double characterWidth(
+      _CalculationCharacter character,
+    ) {
+
+      final painter = TextPainter(
+        text: TextSpan(
+          text: character.char,
+          style: character.isOperator
+              ? operatorStyle.copyWith(
+                  color: character.color,
+                )
+              : numberStyle.copyWith(
+                  color: character.color,
+                ),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+
+      painter.layout();
+
+      return painter.width;
+    }
+
+
+    // ----------------------------------------------------------
+    // CALCUL DE LA POSITION
+    //
+    // TOUS LES ÉLÉMENTS utilisent exactement le même chemin.
+    // ----------------------------------------------------------
+
+    Offset positionOf(
+      int index,
+      List<_CalculationCharacter> list,
+    ) {
+
+      double usedWidth = 0;
+
+      int line = 0;
+
+      double currentX = size.width;
+
+
+      // On parcourt depuis la DROITE.
+      for (int i = list.length - 1; i >= index; i--) {
+
+        final width = characterWidth(list[i]);
+
+
+        // Si le caractère ne rentre plus sur la ligne,
+        // on monte d'une ligne.
+        if (currentX - width < 0) {
+
+          line++;
+
+          currentX = size.width;
+        }
+
+
+        if (i == index) {
+
+          return Offset(
+            currentX - width,
+            size.height -
+                100 -
+                (line * 100),
+          );
+        }
+
+
+        currentX -= width;
+      }
+
+
+      return Offset(
+        0,
+        size.height - 100,
+      );
+    }
+
+
+    final animation =
+        Curves.easeOutCubic.transform(progress);
+
+
+    final isAdding =
+        characters.length > oldValue.length &&
+        _buildCurrentString().startsWith(oldValue);
+
+
+    // ----------------------------------------------------------
+    // ANIMATION D'UN NOUVEAU CARACTÈRE
+    // ----------------------------------------------------------
+
+    if (isAdding) {
+
+      // --------------------------------------------
+      // ANCIENS CARACTÈRES
+      // --------------------------------------------
+
+      for (int i = 0;
+          i < characters.length - 1;
+          i++) {
+
+        final character = characters[i];
+
+        final oldCharacters =
+            characters.sublist(
+          0,
+          characters.length - 1,
+        );
+
+
+        final oldPosition =
+            positionOf(i, oldCharacters);
+
+        final newPosition =
+            positionOf(i, characters);
+
+
+        final x =
+            oldPosition.dx +
+            (newPosition.dx - oldPosition.dx) *
+                animation;
+
+
+        final y =
+            oldPosition.dy +
+            (newPosition.dy - oldPosition.dy) *
+                animation;
+
+
+        _drawCharacter(
+          canvas,
+          character,
+          Offset(x, y),
+        );
+      }
+
+
+      // --------------------------------------------
+      // NOUVEAU CARACTÈRE
+      //
+      // ARRIVE DEPUIS LA DROITE
+      // --------------------------------------------
+
+      final newIndex =
+          characters.length - 1;
+
+
+      final target =
+          positionOf(
+            newIndex,
+            characters,
+          );
+
+
+      final startX = size.width;
+
+
+      final x =
+          startX +
+          (target.dx - startX) *
+              animation;
+
+
+      _drawCharacter(
+        canvas,
+        characters[newIndex],
+        Offset(
+          x,
+          target.dy,
+        ),
+      );
+
+
+      return;
+    }
+
+
+    // ----------------------------------------------------------
+    // AFFICHAGE NORMAL
+    // ----------------------------------------------------------
+
+    for (int i = 0;
+        i < characters.length;
+        i++) {
+
+      final position =
+          positionOf(
+            i,
+            characters,
+          );
+
+
+      _drawCharacter(
+        canvas,
+        characters[i],
+        position,
+      );
+    }
+  }
+
+
+  String _buildCurrentString() {
+    return firstNumber +
+        operator +
+        secondNumber;
+  }
+
+
+  void _drawCharacter(
+    Canvas canvas,
+    _CalculationCharacter character,
+    Offset position,
+  ) {
+
+    final style = character.isOperator
+        ? operatorStyle
+        : numberStyle;
+
+
+    final painter = TextPainter(
+      text: TextSpan(
+        text: character.char,
+        style: style.copyWith(
+          color: character.color,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+
+
+    painter.layout();
+
+
+    painter.paint(
+      canvas,
+      position,
+    );
+  }
+
+
+  @override
+  bool shouldRepaint(
+    covariant _RollingCalculationPainter oldDelegate,
+  ) {
+
+    return oldDelegate.firstNumber != firstNumber ||
+        oldDelegate.operator != operator ||
+        oldDelegate.secondNumber != secondNumber ||
+        oldDelegate.progress != progress ||
+        oldDelegate.showResult != showResult;
+  }
+}
+
+
+class _CalculationCharacter {
+
+  final String char;
+
+  final Color color;
+
+  final bool isOperator;
+
+
+  _CalculationCharacter({
+    required this.char,
+    required this.color,
+    required this.isOperator,
+  });
+}
+
+
+
+
 class GridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -894,6 +1350,3 @@ class GridPainter extends CustomPainter {
     return false;
   }
 }
-
-
-
