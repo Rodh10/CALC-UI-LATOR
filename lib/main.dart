@@ -977,6 +977,18 @@ class _RollingCalculationPainter extends CustomPainter {
     height: 1,
   );
 
+  static const TextStyle smallOperatorStyle = TextStyle(
+    fontSize: 65,
+    fontFamily: 'OffBit-Dot',
+    height: 1,
+  );
+
+  static const TextStyle smallerOperatorStyle = TextStyle(
+    fontSize: 45,
+    fontFamily: 'OffBit-Dot',
+    height: 1,
+  );
+
 
   // ------------------------------------------------------------
   // CONSTRUIT LA SÉQUENCE COMPLÈTE
@@ -1095,7 +1107,11 @@ class _RollingCalculationPainter extends CustomPainter {
     ) {
 
       final style = character.isOperator
-          ? operatorStyle
+          ? useSmallerSize
+              ? smallerOperatorStyle
+              : useSmallSize
+                  ? smallOperatorStyle
+                  : operatorStyle
           : useSmallerSize
               ? smallerNumberStyle
               : useSmallSize
@@ -1338,7 +1354,11 @@ class _RollingCalculationPainter extends CustomPainter {
   ) {
 
     final style = character.isOperator
-        ? operatorStyle
+        ? useSmallerSize
+            ? smallerOperatorStyle
+            : useSmallSize
+                ? smallOperatorStyle
+                : operatorStyle
         : useSmallerSize
             ? smallerNumberStyle
             : useSmallSize
