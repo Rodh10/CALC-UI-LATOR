@@ -965,6 +965,12 @@ class _RollingCalculationPainter extends CustomPainter {
     height: 1,
   );
 
+  static const TextStyle smallerNumberStyle = TextStyle(
+    fontSize: 45,
+    fontFamily: 'OffBit-Dot',
+    height: 1,
+  );
+
   static const TextStyle operatorStyle = TextStyle(
     fontSize: 80,
     fontFamily: 'OffBit-Dot',
@@ -1070,8 +1076,14 @@ class _RollingCalculationPainter extends CustomPainter {
       return;
     }
 
+    final int lineCount =
+        _getLineCount(characters, size);
+
     final bool useSmallSize =
-        _getLineCount(characters, size) > 2;
+        lineCount > 2;
+
+    final bool useSmallerSize =
+        lineCount > 5;
 
 
     // ----------------------------------------------------------
@@ -1084,9 +1096,11 @@ class _RollingCalculationPainter extends CustomPainter {
 
       final style = character.isOperator
           ? operatorStyle
-          : useSmallSize
-              ? smallNumberStyle
-              : numberStyle;
+          : useSmallerSize
+              ? smallerNumberStyle
+              : useSmallSize
+                  ? smallNumberStyle
+                  : numberStyle;
 
       final painter = TextPainter(
         text: TextSpan(
@@ -1144,8 +1158,23 @@ class _RollingCalculationPainter extends CustomPainter {
           return Offset(
             currentX - width,
             size.height -
-                (useSmallSize ? 75 : 100) -
-                (line * (useSmallSize ? 65 : 100)),
+                (
+                  useSmallerSize
+                      ? 55
+                      : useSmallSize
+                          ? 75
+                          : 100
+                ) -
+                (
+                  line *
+                  (
+                    useSmallerSize
+                        ? 45
+                        : useSmallSize
+                            ? 65
+                            : 100
+                  )
+                ),
           );
         }
 
@@ -1218,6 +1247,7 @@ class _RollingCalculationPainter extends CustomPainter {
           character,
           Offset(x, y),
           useSmallSize: useSmallSize,
+          useSmallerSize: useSmallerSize,
         );
       }
 
@@ -1256,6 +1286,7 @@ class _RollingCalculationPainter extends CustomPainter {
           target.dy,
         ),
         useSmallSize: useSmallSize,
+        useSmallerSize: useSmallerSize,
       );
 
 
@@ -1283,6 +1314,7 @@ class _RollingCalculationPainter extends CustomPainter {
         characters[i],
         position,
         useSmallSize: useSmallSize,
+        useSmallerSize: useSmallerSize,
       );
     }
   }
@@ -1301,14 +1333,17 @@ class _RollingCalculationPainter extends CustomPainter {
     Offset position,
     {
       bool useSmallSize = false,
+      bool useSmallerSize = false,
     }
   ) {
 
     final style = character.isOperator
         ? operatorStyle
-        : useSmallSize
-            ? smallNumberStyle
-            : numberStyle;
+        : useSmallerSize
+            ? smallerNumberStyle
+            : useSmallSize
+                ? smallNumberStyle
+                : numberStyle;
 
     final painter = TextPainter(
       text: TextSpan(
