@@ -1,17 +1,85 @@
-# calculatrice
+# CALC-UI-LATOR
 
-A new Flutter project.
+```text
+A minimalist terminal-inspired calculator
+built with Flutter.
+```
 
-## Getting Started
+## ABOUT
 
-This project is a starting point for a Flutter application.
+```text
+CALC-UI-LATOR is a personal Flutter project focused
+on creating a minimalist calculator with a monochrome,
+terminal-inspired visual identity and subtle
+interactive elements.
 
-A few resources to get you started if this is your first Flutter project:
+The application is currently an EARLY PROTOTYPE.
+```
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## CURRENT STATE
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```text
+The calculator currently supports simple operations
+in the following format:
+
+    a (operator) b = result
+
+Example:
+
+    25 + 10 = 35
+
+Multiple consecutive calculations are not supported yet.
+```
+
+## WORKING FEATURES
+
+```text
+[+] Basic arithmetic operations
+[+] Sign inversion (±)
+[+] Last Answer (LAST ANS)
+[+] Delete and clear functions
+[+] Animated pixel grid
+[+] Terminal-inspired interface
+```
+
+## CURRENT LIMITATIONS
+
+```text
+[-] Only one operation at a time:
+    a (operator) b = result
+
+[-] Multiple operations in a single calculation
+    are not supported yet.
+
+[-] Parentheses are currently not functional.
+
+[-] The project is still in its first prototype stage.
+```
+
+## DOWNLOAD
+
+```text
+The latest Android APK is available in the
+Releases section.
+```
+
+## TECH STACK
+
+```text
+Flutter
+Dart
+Android
+```
+
+## VERSION
+
+```text
+v1.0.0 — FIRST PROTOTYPE
+```
+
+## AUTHOR
+
+```text
+Félicien Anjarasoa — Rodh10
+GitHub: @Rodh10
+```
