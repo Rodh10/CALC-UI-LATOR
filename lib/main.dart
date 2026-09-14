@@ -685,6 +685,188 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
             if (text == '.' || int.tryParse(text) != null) {
 
 
+              // LIMITE DE 10 LIGNES
+              if (int.tryParse(text) != null) {
+                final characters = <String>[];
+
+                if (operator.isNotEmpty) {
+                  characters.addAll(firstNumber.split(''));
+                  characters.add(operator);
+                  characters.addAll(secondNumber.split(''));
+                } else {
+                  characters.addAll(display.split(''));
+                }
+
+                // On simule le chiffre qui va être ajouté
+                characters.add(text);
+
+                // Largeur approximative de la dernière réduction
+                const double digitWidth = 45;
+
+                final availableWidth = MediaQuery.of(context).size.width - 80;
+
+                final digitsPerLine =
+                    (availableWidth / digitWidth).floor();
+
+                final projectedLines =
+                    (characters.length / digitsPerLine).ceil();
+
+                if (projectedLines > 9) {
+
+                  HapticFeedback.heavyImpact();
+
+                  Future.delayed(const Duration(milliseconds: 200), () {
+                    HapticFeedback.heavyImpact();
+                  });
+
+                  showDialog(
+                    context: context,
+                    barrierColor: Colors.black.withValues(alpha: 0.85),
+                    builder: (context) => Dialog(
+                      backgroundColor: Colors.transparent,
+                      insetPadding: const EdgeInsets.symmetric(
+                        horizontal: 35,
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          color: Colors.black,
+                          border: Border.all(
+                            color: const Color(0xFFBA3A23),
+                            width: 1,
+                          ),
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.all(18),
+                          decoration: BoxDecoration(
+                            color: Colors.black,
+                            border: Border.all(
+                              color: Colors.white24,
+                              width: 1,
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+
+                              // HEADER
+                              Row(
+                                children: [
+                                  const Text(
+                                    '⚠',
+                                    style: TextStyle(
+                                      color: Color(0xFFBA3A23),
+                                      fontSize: 28,
+                                      fontFamily: 'OffBit-Regular',
+                                    ),
+                                  ),
+
+                                  const SizedBox(width: 12),
+
+                                  const Expanded(
+                                    child: Text(
+                                      'SYSTEM ALERT',
+                                      style: TextStyle(
+                                        color: Color(0xFFBA3A23),
+                                        fontFamily: 'OffBit-Regular',
+                                        fontSize: 18,
+                                        letterSpacing: 2,
+                                      ),
+                                    ),
+                                  ),
+
+                                  GestureDetector(
+                                    onTap: () => Navigator.pop(context),
+                                    child: const Text(
+                                      '×',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontFamily: 'OffBit-Regular',
+                                        fontSize: 28,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 12),
+
+                              Container(
+                                height: 1,
+                                color: Colors.white24,
+                              ),
+
+                              const SizedBox(height: 25),
+
+                              // MESSAGE
+                              const Text(
+                                'LIMIT REACHED',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Color(0xFFBA3A23),
+                                  fontFamily: 'OffBit-Regular',
+                                  fontSize: 26,
+                                  letterSpacing: 2,
+                                ),
+                              ),
+
+                              const SizedBox(height: 12),
+
+                              const Text(
+                                'The maximum number of lines\nhas been reached.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontFamily: 'OffBit-Regular',
+                                  fontSize: 15,
+                                  height: 1.5,
+                                ),
+                              ),
+
+                              const SizedBox(height: 25),
+
+                              Container(
+                                height: 1,
+                                color: Colors.white24,
+                              ),
+
+                              const SizedBox(height: 15),
+
+                              // OK
+                              GestureDetector(
+                                onTap: () {
+                                  HapticFeedback.lightImpact();
+                                  Navigator.pop(context);
+                                },
+                                child: Container(
+                                  width: 60,
+                                  height: 60,
+                                  child: const Center(
+                                    child: Text(
+                                      'OK',
+                                      style: TextStyle(
+                                        color: Color(0xFF2196F3),
+                                        fontFamily: 'OffBit-Regular',
+                                        fontSize: 40,
+                                        letterSpacing: 2,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+
+                  return;
+                }
+              }
+
+
 
               if (digitPatterns.containsKey(text)) {
                 animateCellsRandomly(text);
@@ -960,7 +1142,7 @@ class _RollingCalculationPainter extends CustomPainter {
   );
 
   static const TextStyle smallNumberStyle = TextStyle(
-    fontSize: 65,
+    fontSize: 70,
     fontFamily: 'OffBit-Dot',
     height: 1,
   );
@@ -970,6 +1152,8 @@ class _RollingCalculationPainter extends CustomPainter {
     fontFamily: 'OffBit-Dot',
     height: 1,
   );
+
+  static const int maxLines = 10;
 
   static const TextStyle operatorStyle = TextStyle(
     fontSize: 80,
@@ -1095,7 +1279,7 @@ class _RollingCalculationPainter extends CustomPainter {
         lineCount > 2;
 
     final bool useSmallerSize =
-        lineCount > 5;
+        lineCount > 4;
 
 
     // ----------------------------------------------------------
