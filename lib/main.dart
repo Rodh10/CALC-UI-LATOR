@@ -959,6 +959,11 @@ class _RollingCalculationPainter extends CustomPainter {
     height: 1,
   );
 
+  static const TextStyle smallNumberStyle = TextStyle(
+    fontSize: 65,
+    fontFamily: 'OffBit-Dot',
+    height: 1,
+  );
 
   static const TextStyle operatorStyle = TextStyle(
     fontSize: 80,
@@ -1018,6 +1023,44 @@ class _RollingCalculationPainter extends CustomPainter {
   }
 
 
+
+  int _getLineCount(
+    List<_CalculationCharacter> characters,
+    Size size,
+  ) {
+    double currentX = size.width;
+    int line = 0;
+
+    for (int i = characters.length - 1; i >= 0; i--) {
+      final character = characters[i];
+
+      final style = character.isOperator
+          ? operatorStyle
+          : numberStyle;
+
+      final painter = TextPainter(
+        text: TextSpan(
+          text: character.char,
+          style: style,
+        ),
+        textDirection: TextDirection.ltr,
+      );
+
+      painter.layout();
+
+      final width = painter.width;
+
+      if (currentX - width < 0) {
+        line++;
+        currentX = size.width;
+      }
+
+      currentX -= width;
+    }
+
+    return line + 1;
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
 
@@ -1026,6 +1069,9 @@ class _RollingCalculationPainter extends CustomPainter {
     if (characters.isEmpty) {
       return;
     }
+
+    final bool useSmallSize =
+        _getLineCount(characters, size) > 2;
 
 
     // ----------------------------------------------------------
@@ -1036,16 +1082,18 @@ class _RollingCalculationPainter extends CustomPainter {
       _CalculationCharacter character,
     ) {
 
+      final style = character.isOperator
+          ? operatorStyle
+          : useSmallSize
+              ? smallNumberStyle
+              : numberStyle;
+
       final painter = TextPainter(
         text: TextSpan(
           text: character.char,
-          style: character.isOperator
-              ? operatorStyle.copyWith(
-                  color: character.color,
-                )
-              : numberStyle.copyWith(
-                  color: character.color,
-                ),
+          style: style.copyWith(
+            color: character.color,
+          ),
         ),
         textDirection: TextDirection.ltr,
       );
@@ -1061,6 +1109,8 @@ class _RollingCalculationPainter extends CustomPainter {
     //
     // TOUS LES ÉLÉMENTS utilisent exactement le même chemin.
     // ----------------------------------------------------------
+
+
 
     Offset positionOf(
       int index,
@@ -1094,8 +1144,8 @@ class _RollingCalculationPainter extends CustomPainter {
           return Offset(
             currentX - width,
             size.height -
-                100 -
-                (line * 100),
+                (useSmallSize ? 75 : 100) -
+                (line * (useSmallSize ? 65 : 100)),
           );
         }
 
@@ -1109,6 +1159,7 @@ class _RollingCalculationPainter extends CustomPainter {
         size.height - 100,
       );
     }
+
 
 
     final animation =
@@ -1166,6 +1217,7 @@ class _RollingCalculationPainter extends CustomPainter {
           canvas,
           character,
           Offset(x, y),
+          useSmallSize: useSmallSize,
         );
       }
 
@@ -1203,6 +1255,7 @@ class _RollingCalculationPainter extends CustomPainter {
           x,
           target.dy,
         ),
+        useSmallSize: useSmallSize,
       );
 
 
@@ -1229,6 +1282,7 @@ class _RollingCalculationPainter extends CustomPainter {
         canvas,
         characters[i],
         position,
+        useSmallSize: useSmallSize,
       );
     }
   }
@@ -1245,12 +1299,16 @@ class _RollingCalculationPainter extends CustomPainter {
     Canvas canvas,
     _CalculationCharacter character,
     Offset position,
+    {
+      bool useSmallSize = false,
+    }
   ) {
 
     final style = character.isOperator
         ? operatorStyle
-        : numberStyle;
-
+        : useSmallSize
+            ? smallNumberStyle
+            : numberStyle;
 
     final painter = TextPainter(
       text: TextSpan(
@@ -1262,16 +1320,13 @@ class _RollingCalculationPainter extends CustomPainter {
       textDirection: TextDirection.ltr,
     );
 
-
     painter.layout();
-
 
     painter.paint(
       canvas,
       position,
     );
   }
-
 
   @override
   bool shouldRepaint(
